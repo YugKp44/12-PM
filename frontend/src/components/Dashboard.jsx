@@ -1,37 +1,67 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { Chart } from "react-google-charts";
-import "./Dashboard.css"; // Add a dedicated CSS file
+import "./Dashboard.css";
 
 const Dashboard = () => {
   const [analyticsData, setAnalyticsData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [token, setToken] = useState(null);
 
   useEffect(() => {
+    // Get token from URL query parameters
+    const urlParams = new URLSearchParams(window.location.search);
+    const accessToken = urlParams.get("token");
+
+    if (accessToken) {
+      // Store the token in localStorage and set it in state
+      localStorage.setItem("accessToken", accessToken);
+      setToken(accessToken);
+    } else {
+      // If no token is found in the URL, try to retrieve it from localStorage
+      const storedToken = localStorage.getItem("accessToken");
+      if (storedToken) {
+        setToken(storedToken);
+      }
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!token) {
+      return; // If no token, don't fetch analytics data
+    }
+
     const fetchAnalyticsData = async () => {
       try {
         const response = await axios.get(
-          "http://localhost:5000/api/analytics/data?startDate=30daysAgo&endDate=today",
-          { withCredentials: true }
+          "https://three-pm-1.onrender.com/api/analytics/data?startDate=7daysAgo&endDate=today",
+          {
+            headers: {
+              Authorization: `Bearer ${token}`, // Attach token to the Authorization header
+            },
+          }
         );
         setAnalyticsData(response.data);
       } catch (error) {
         console.error("Error fetching analytics data:", error);
-        setError("Failed to load analytics data.");
+        setError("Failed to load analytics data. Please try again.");
       } finally {
         setLoading(false);
       }
     };
 
     fetchAnalyticsData();
-  }, []);
+  }, [token]); // Dependency on token, fetch data again if token changes
 
   const top8AnalyticsData = analyticsData.slice(0, 8);
 
   const geoChartData = [
     ["Country", "Active Users"],
-    ...analyticsData.map(({ country, activeUsers }) => [country, activeUsers]),
+    ...((analyticsData || []).map(({ country, activeUsers }) => [
+      country,
+      activeUsers,
+    ]) || []),
   ];
 
   const geoChartOptions = {
@@ -60,6 +90,10 @@ const Dashboard = () => {
     colors: ["#1e88e5", "#42a5f5"],
   };
 
+  if (!token) {
+    return <p>You are not authenticated. Please log in.</p>;
+  }
+
   return (
     <div className="dashboard-container">
       <h1 className="dashboard-title">Google Analytics Dashboard</h1>
@@ -68,6 +102,8 @@ const Dashboard = () => {
         <p className="dashboard-loading">Loading data...</p>
       ) : error ? (
         <p className="dashboard-error">{error}</p>
+      ) : !analyticsData.length ? (
+        <p className="dashboard-error">No data available to display.</p>
       ) : (
         <>
           {/* GeoChart */}
