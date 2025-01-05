@@ -12,7 +12,7 @@ const Dashboard = () => {
     const fetchAnalyticsData = async () => {
       try {
         const response = await axios.get(
-          "https://three-pm-1.onrender.com/api/analytics/data?startDate=30daysAgo&endDate=today",
+          "http://localhost:5000/api/analytics/data?startDate=30daysAgo&endDate=today",
           { withCredentials: true }
         );
         setAnalyticsData(response.data);
