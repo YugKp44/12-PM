@@ -71,7 +71,10 @@ app.get('/', (req, res) => {
 // Routes
 app.use('/auth', authRoutes);
 app.use('/api/analytics', analyticsRoutes);
-
+//testing routes
+app.get('/test', (req, res) => {
+  res.send('Hello World!');
+});
 // Error handling
 app.use(errorHandler);
 
