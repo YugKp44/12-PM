@@ -18,7 +18,7 @@ const logger = setupLogging();
 // Security middleware
 app.use(helmet());
 app.use(cors({
-  origin: '*', // Allow any origin
+  origin: 'http://localhost:5173', // Allow any origin
   credentials: true // Include credentials (cookies) in requests
 }));
 
